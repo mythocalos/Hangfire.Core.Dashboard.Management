@@ -44,6 +44,12 @@ namespace Hangfire.Core.Dashboard.Management.Support
                         meta.DisplayName = methodInfo.GetCustomAttribute<DisplayNameAttribute>().DisplayName;
                     }
 
+                    if (methodInfo.GetCustomAttributes(true).OfType<QueueAttribute>().Any())
+                    {
+                        meta.MethodInfo = methodInfo;
+                        meta.Queue = methodInfo.GetCustomAttribute<QueueAttribute>().Queue;
+                    }
+
                     Metadata.Add(meta);
                 }
             }
