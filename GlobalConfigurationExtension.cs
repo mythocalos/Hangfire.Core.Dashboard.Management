@@ -22,14 +22,13 @@ namespace Hangfire.Core.Dashboard.Management
         {
             foreach (var pageInfo in JobsHelper.Pages)
             {
-                ManagementBasePage.AddCommands(pageInfo.Queue);
-
-                ManagementSidebarMenu.Items.Add(p => new MenuItem(pageInfo.MenuName, p.Url.To($"{ManagementPage.UrlRoute}/{pageInfo.Queue}"))
+                ManagementBasePage.BuildApiRoutesAndHandlersForAllJobs(pageInfo.Queue);
+                ManagementSidebarMenu.Items.Add(p => new MenuItem(pageInfo.MenuName, p.Url.To($"{ManagementPage.UrlRoute}/{pageInfo.MenuName.ToLower().Replace(" ", String.Empty)}"))
                 {
-                    Active = p.RequestPath.StartsWith($"{ManagementPage.UrlRoute}/{pageInfo.Queue}")
+                    Active = p.RequestPath.StartsWith($"{ManagementPage.UrlRoute}/{pageInfo.MenuName.ToLower().Replace(" ", String.Empty)}")
                 });
 
-                DashboardRoutes.Routes.AddRazorPage($"{ManagementPage.UrlRoute}/{pageInfo.Queue}", x => new ManagementBasePage(pageInfo.Title, pageInfo.Title, pageInfo.Queue));
+                DashboardRoutes.Routes.AddRazorPage($"{ManagementPage.UrlRoute}/{pageInfo.MenuName.ToLower().Replace(" ", String.Empty)}", x => new ManagementBasePage(pageInfo.Title, pageInfo.Title, pageInfo.Queue));
             }
             
             //note: have to use new here as the pages are dispatched and created each time. If we use an instance, the page gets duplicated on each call
