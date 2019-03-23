@@ -23,7 +23,7 @@ namespace Hangfire.Core.Dashboard.Management.Support
             this.contentType = contentType;
         }
 
-        public Task Dispatch(DashboardContext context)
+        public async Task Dispatch(DashboardContext context)
         {
             if (!string.IsNullOrEmpty(contentType))
             {
@@ -41,7 +41,7 @@ namespace Hangfire.Core.Dashboard.Management.Support
                 }
             }
 
-            return WriteResourceAsync(context.Response, assembly, resourceName);
+            await WriteResourceAsync(context.Response, assembly, resourceName);
         }
 
         private static async Task WriteResourceAsync(DashboardResponse response, Assembly assembly, string resourceName)
