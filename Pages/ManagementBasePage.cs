@@ -38,6 +38,7 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                 var id = $"{jobMetadata.DisplayName.Replace(" ", string.Empty)}";
 
                 if (jobMetadata.MethodInfo.GetParameters().Length > 1)
+                var route = GetRoute(jobMetadata);
                 {
 
                     string inputs = string.Empty;
@@ -95,14 +96,18 @@ namespace Hangfire.Core.Dashboard.Management.Pages
         }
 
         public static void AddCommands(string queue)
+        public static string GetRoute(JobMetadata jobMetadata)
+        {
+            return $"{ManagementPage.UrlRoute}/{jobMetadata.Type.Name.ToString().Replace(".","-")}/{jobMetadata.MethodInfo.Name}";
+        }
         {
             var jobs = JobsHelper.Metadata.Where(j => j.Queue.Contains(queue));
 
             foreach (var jobMetadata in jobs)
             {
-                var route = $"{ManagementPage.UrlRoute}/{queue}/{jobMetadata.DisplayName.Replace(" ", string.Empty)}";
 
                 DashboardRoutes.Routes.Add(route, new CommandWithResponseDispatcher(context =>
+                var route = GetRoute(jobMetadata);
                 {
                     var par = new List<object>();
                     var schedule = Task
