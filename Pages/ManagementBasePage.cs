@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -34,11 +35,12 @@ namespace Hangfire.Core.Dashboard.Management.Pages
 
             foreach (var jobMetadata in jobs)
             {
-                var route = $"{ManagementPage.UrlRoute}/{queue}/{jobMetadata.DisplayName.Replace(" ", string.Empty)}";
-                var id = $"{jobMetadata.DisplayName.Replace(" ", string.Empty)}";
 
-                if (jobMetadata.MethodInfo.GetParameters().Length > 1)
                 var route = GetRoute(jobMetadata);
+
+                var id = GetMethodName(jobMetadata);
+
+                if (jobMetadata.MethodInfo.GetParameters().Length > 0)
                 {
 
                     string inputs = string.Empty;
@@ -52,7 +54,6 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         if (parameterInfo.GetCustomAttributes(true).OfType<DisplayDataAttribute>().Any())
                         {
                             displayInfo = parameterInfo.GetCustomAttribute<DisplayDataAttribute>();
-                            
                         }
                         
                         var myId = $"{id}_{parameterInfo.Name}";
@@ -72,18 +73,22 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         {
                             inputs += "<br/>" + InputCheckbox(myId, displayInfo?.LabelText ?? parameterInfo.Name, displayInfo?.PlaceholderText ?? parameterInfo.Name);
                         }
+                        else if (parameterInfo.ParameterType.ToString().Contains("Enum"))
+                        {
+                            inputs += InputTextbox(myId, displayInfo?.LabelText ?? parameterInfo.Name, displayInfo?.PlaceholderText ?? parameterInfo.Name);
+                        }
                         else
                         {
-                            throw new NotImplementedException();
+                            throw new NotImplementedException(parameterInfo.ParameterType.ToString() + " Converter Not Implemented");
                         }
                     }
 
-                    Panel(id, jobMetadata.DisplayName, jobMetadata.Description, inputs, CreateButtons(route, "Enqueue", "enqueueing", id));
+                    Panel(id, jobMetadata.Type.Name + "." +jobMetadata.DisplayName, jobMetadata.Description, inputs, CreateButtons(route, "Enqueue", "enqueueing", id));
 
                 }
                 else
                 {
-                    Panel(id, jobMetadata.DisplayName, jobMetadata.Description, string.Empty, CreateButtons(route, "Enqueue", "enqueueing", id));
+                    Panel(id, jobMetadata.Type.Name + "." + jobMetadata.DisplayName, jobMetadata.Description, string.Empty, CreateButtons(route, "Enqueue", "enqueueing", id));
 
                 }
 
@@ -95,109 +100,184 @@ namespace Hangfire.Core.Dashboard.Management.Pages
 
         }
 
-        public static void AddCommands(string queue)
+
         public static string GetRoute(JobMetadata jobMetadata)
         {
             return $"{ManagementPage.UrlRoute}/{jobMetadata.Type.Name.ToString().Replace(".","-")}/{jobMetadata.MethodInfo.Name}";
         }
+
+
+        public static void Go(DashboardContext context, string message)
+        {
+            var responseObj = new { status = "test status", message };
+            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            context.Response.WriteAsync(JsonConvert.SerializeObject(responseObj));
+        }
+
+
+        public static string GetMethodName(JobMetadata jobMetadata)
+        {
+            return $"{ jobMetadata.Type.Name.ToString() }-{ jobMetadata.MethodInfo.Name}";
+        }
+
+        public static void BuildApiRoutesAndHandlersForAllJobs(string queue)
         {
             var jobs = JobsHelper.Metadata.Where(j => j.Queue.Contains(queue));
 
             foreach (var jobMetadata in jobs)
             {
-
-                DashboardRoutes.Routes.Add(route, new CommandWithResponseDispatcher(context =>
                 var route = GetRoute(jobMetadata);
+                
+                DashboardRoutes.Routes.Add(route, new CommandWithResponseDispatcher(async (context) => 
                 {
                     var par = new List<object>();
-                    var schedule = Task
-                        .Run(() => context.Request.GetFormValuesAsync(
-                            $"{jobMetadata.DisplayName.Replace(" ", string.Empty)}_schedule")).Result.FirstOrDefault();
-                    var cron = Task
-                        .Run(() => context.Request.GetFormValuesAsync(
-                            $"{jobMetadata.DisplayName.Replace(" ", string.Empty)}_cron")).Result.FirstOrDefault();
 
-                    foreach (var parameterInfo in jobMetadata.MethodInfo.GetParameters())
+                    var methodName = GetMethodName(jobMetadata);
+                    var schedule = Task.Run(() => context.Request.GetFormValuesAsync($"{methodName}_schedule")).Result.FirstOrDefault();
+                    var cron = Task.Run(() => context.Request.GetFormValuesAsync($"{methodName}_cron")).Result.FirstOrDefault();
+
+                    try
                     {
-                        if (parameterInfo.ParameterType == typeof(PerformContext) ||
-                            parameterInfo.ParameterType == typeof(IJobCancellationToken))
+                        
+                        foreach (var parameterInfo in jobMetadata.MethodInfo.GetParameters())
                         {
-                            par.Add(null);
-                            continue;
-                        }
-                        ;
+                            if (parameterInfo.ParameterType == typeof(PerformContext) ||
+                                parameterInfo.ParameterType == typeof(IJobCancellationToken))
+                            {
+                                par.Add(null);
+                                continue;
+                            }
 
-                        var variable = $"{jobMetadata.DisplayName.Replace(" ", string.Empty)}_{parameterInfo.Name}";
-                        if (parameterInfo.ParameterType == typeof(DateTime))
-                        {
-                            variable = $"{variable}_datetimepicker";
-                        }
 
-                        var t = Task.Run(() => context.Request.GetFormValuesAsync(variable)).Result;
+                            var variable = $"{methodName}_{parameterInfo.Name}";
+                            if (parameterInfo.ParameterType == typeof(DateTime))
+                            {
+                                variable = $"{variable}_datetimepicker";
+                            }
 
-                        object item = null;
-                        var formInput = t.FirstOrDefault();
-                        if (parameterInfo.ParameterType == typeof(string))
-                        {
-                            item = formInput;
+                            var t = Task.Run(() => context.Request.GetFormValuesAsync(variable)).Result;
+
+                            object item = null;
+                            var formInput = t.FirstOrDefault();
+                            if (parameterInfo.ParameterType == typeof(string))
+                            {
+                                item = formInput;
+                            }
+                            else if (parameterInfo.ParameterType == typeof(int))
+                            {
+                                if (formInput != null) item = int.Parse(formInput);
+                            }
+                            else if (parameterInfo.ParameterType == typeof(DateTime))
+                            {
+                                item = formInput == null ? DateTime.MinValue : DateTime.Parse(formInput);
+                            }
+                            else if (parameterInfo.ParameterType == typeof(bool))
+                            {
+                                item = formInput == "on";
+                            }
+                            else if (parameterInfo.ParameterType.ToString().Contains("Enum"))
+                            {
+                                if (formInput != null)
+                                {
+                                    try
+                                    {
+                                        item = Enum.Parse(parameterInfo.ParameterType, formInput);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        throw new ArgumentException("Specified enum type could not be found", parameterInfo.ParameterType.ToString());
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                throw new NotImplementedException(parameterInfo.ParameterType.ToString() + " Converter Not Implemented");
+                            }
+
+                            par.Add(item);
+
                         }
-                        else if (parameterInfo.ParameterType == typeof(int))
+                    }
+                    catch (Exception e)
+                    {
+                        var responseObj = new { status = "failed parsing params", message = e.Message };
+                        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                        await context.Response.WriteAsync(JsonConvert.SerializeObject(responseObj));
+                        return false;
+                    }
+
+                    
+                    try
+                    {
+                        var job = new Job(jobMetadata.Type, jobMetadata.MethodInfo, par.ToArray());
+                        var client = new BackgroundJobClient(context.Storage);
+                        string jobLink = null;
+                        string jobId = null;
+
+                        if (!string.IsNullOrEmpty(schedule))
                         {
-                            if (formInput != null) item = int.Parse(formInput);
+                            try
+                            {
+                                var minutes = int.Parse(schedule);
+                                jobId = client.Create(job, new ScheduledState(new TimeSpan(0, 0, minutes, 0)));
+                                jobLink = new UrlHelper(context).JobDetails(jobId);
+                            }
+                            catch (Exception e)
+                            {
+                                var responseObj = new { status = "failed creating recurring job", message = e.Message };
+                                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                                await context.Response.WriteAsync(JsonConvert.SerializeObject(responseObj));
+                                return false;
+                            }
+                            
                         }
-                        else if (parameterInfo.ParameterType == typeof(DateTime))
+                        else if (!string.IsNullOrEmpty(cron))
                         {
-                            item = formInput == null ? DateTime.MinValue : DateTime.Parse(formInput);
-                        }
-                        else if (parameterInfo.ParameterType == typeof(bool))
-                        {
-                            item = formInput == "on";
+                            var manager = new RecurringJobManager(context.Storage);
+                            try
+                            {
+                                var recurringJobUnqiueId = String.Format(jobMetadata.DisplayName, job.Args.ToArray());
+                                manager.AddOrUpdate(recurringJobUnqiueId, job, cron, TimeZoneInfo.Utc, queue);
+                                jobLink = new UrlHelper(context).To("/recurring");
+                            }
+                            catch (Exception e)
+                            {
+                                var responseObj = new { status = "failed creating recurring job", message = e.Message };
+                                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                                await context.Response.WriteAsync(JsonConvert.SerializeObject(responseObj));
+                                return false;
+                            }
                         }
                         else
                         {
-                            throw new NotImplementedException();
+                            jobId = client.Create(job, new EnqueuedState(jobMetadata.Queue));
+                            jobLink = new UrlHelper(context).JobDetails(jobId);
                         }
 
-                        par.Add(item);
-
-                    }
-
-                    var job = new Job(jobMetadata.Type, jobMetadata.MethodInfo, par.ToArray());
-
-                    var client = new BackgroundJobClient(context.Storage);
-                    string jobLink = null;
-                    if (!string.IsNullOrEmpty(schedule))
-                    {
-                        var minutes = int.Parse(schedule);
-                        var jobId = client.Create(job, new ScheduledState(new TimeSpan(0, 0, minutes, 0)));
-                        jobLink = new UrlHelper(context).JobDetails(jobId);
-                    }
-                    else if (!string.IsNullOrEmpty(cron))
-                    {
-                        var manager = new RecurringJobManager(context.Storage);
-                        try
+                        if (!string.IsNullOrEmpty(jobLink))
                         {
-                            manager.AddOrUpdate(jobMetadata.DisplayName, job, cron, TimeZoneInfo.Utc, queue);
-                            jobLink = new UrlHelper(context).To("/recurring");
+                            var responseObj = new { jobLink = jobLink };
+                            var json = JsonConvert.SerializeObject(responseObj);
+                            await context.Response.WriteAsync(json);
+                            return true;
                         }
-                        catch (Exception)
+                        else
                         {
+                            var responseObj = new { status = "fail" };
+                            context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                            await context.Response.WriteAsync(JsonConvert.SerializeObject(responseObj));
                             return false;
                         }
                     }
-                    else
+                    catch (Exception e)
                     {
-                        var jobId = client.Create(job, new EnqueuedState(jobMetadata.Queue));
-                        jobLink = new UrlHelper(context).JobDetails(jobId);
+                        var responseObj = new { status = "fail", message = e.Message };
+                        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                        await context.Response.WriteAsync(JsonConvert.SerializeObject(responseObj));
+                        return false;
                     }
-                    if (!string.IsNullOrEmpty(jobLink))
-                    {
-                        var responseObj = new { jobLink };
-                        context.Response.StatusCode = (int) HttpStatusCode.OK;
-                        context.Response.WriteAsync(JsonConvert.SerializeObject(responseObj));
-                        return true;
-                    }
-                    return false;
+                    
+                    
                 }));
             }
         }
