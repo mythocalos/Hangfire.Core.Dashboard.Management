@@ -62,12 +62,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GlobalConfigurationExtension.cs" />
+    <Compile Include="Metadata\ManagementPageNavigation.cs" />
     <Compile Include="Support\CommandWithResponseDispatcher.cs" />
     <Compile Include="Support\IJob.cs" />
     <Compile Include="Support\JobsHelper.cs" />
     <Compile Include="Metadata\DisplayDataAttribute.cs" />
     <Compile Include="Metadata\JobMetadata.cs" />
-    <Compile Include="Metadata\ManagementPageAttribute.cs" />
+    <Compile Include="Metadata\ManagementPageSectionAttribute.cs" />
     <Compile Include="Pages\CustomSidebarMenu.cs" />
     <Compile Include="Pages\ManagementBasePage.cs" />
     <Compile Include="Pages\ManagementPage.cs" />

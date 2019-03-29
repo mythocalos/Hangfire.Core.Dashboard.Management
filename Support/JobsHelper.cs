@@ -9,54 +9,59 @@ namespace Hangfire.Core.Dashboard.Management.Support
 {
     public static class JobsHelper
     {
-        public static List<JobMetadata> Metadata { get; private set; }
-        internal static List<ManagementPageAttribute> Pages { get; set; }
+        public static List<JobMetadata> Jobs { get; private set; }
+        internal static List<ManagementPageNavigation> Pages { get; set; }
 
         internal static void GetAllJobs(Assembly assembly)
         {
-            Metadata = new List<JobMetadata>();
-            Pages = new List<ManagementPageAttribute>();
+            Jobs = new List<JobMetadata>();
+            Pages = new List<ManagementPageNavigation>();
 
             foreach (Type ti in  assembly.GetTypes().Where(x => !x.IsInterface && typeof(IJob).IsAssignableFrom(x) && x.Name != (typeof(IJob).Name)))
             {
                 var q="default";
 
-                if (ti.GetCustomAttributes(true).OfType<ManagementPageAttribute>().Any())
-                {
-                    var attr = ti.GetCustomAttribute<ManagementPageAttribute>();
-                    q =  attr.Queue;
-                    if (!Pages.Any(x => x.MenuName == attr.MenuName)) Pages.Add(attr);
-                }
+//                if (ti.GetCustomAttributes(true).OfType<ManagementPageAttribute>().Any())
+//                {
+//                    var attr = ti.GetCustomAttribute<ManagementPageAttribute>();
+//                    q =  attr.Queue;
+//                    if (!Pages.Any(x => x.MenuName == attr.MenuName)) Pages.Add(attr);
+//                }
                 
 
                 foreach (var methodInfo in ti.GetMethods().Where(m => m.DeclaringType == ti))
                 {
-                    var meta = new JobMetadata
+                    var jobData = new JobMetadata
                     {
                         Type = ti,
                         Queue = q //Defaulted to value from Class, can be override at method level
                     };
-                    meta.MethodInfo = methodInfo;
+                    jobData.MethodInfo = methodInfo;
                     if (methodInfo.GetCustomAttributes(true).OfType<DescriptionAttribute>().Any())
                     {
-                        meta.Description = methodInfo.GetCustomAttribute<DescriptionAttribute>().Description;
+                        jobData.Description = methodInfo.GetCustomAttribute<DescriptionAttribute>().Description;
+                    }
+
+                    if (methodInfo.GetCustomAttributes(true).OfType<ManagementPageSectionAttribute>().Any())
+                    {
+                        jobData.ManagementPageSection = methodInfo.GetCustomAttribute<ManagementPageSectionAttribute>().Section;
                     }
 
                     if (methodInfo.GetCustomAttributes(true).OfType<DisplayNameAttribute>().Any())
                     {
-                        meta.DisplayName = methodInfo.GetCustomAttribute<DisplayNameAttribute>().DisplayName;
+                        jobData.DisplayName = methodInfo.GetCustomAttribute<DisplayNameAttribute>().DisplayName;
                     }
                     else
                     {
-                        meta.DisplayName = methodInfo.Name;
+                        jobData.DisplayName = methodInfo.Name;
                     }
 
                     if (methodInfo.GetCustomAttributes(true).OfType<QueueAttribute>().Any())
                     {
-                        meta.Queue = methodInfo.GetCustomAttribute<QueueAttribute>().Queue;
+                        jobData.Queue = methodInfo.GetCustomAttribute<QueueAttribute>().Queue;
                     }
 
-                    Metadata.Add(meta);
+                    Jobs.Add(jobData);
                 }
             }
         }

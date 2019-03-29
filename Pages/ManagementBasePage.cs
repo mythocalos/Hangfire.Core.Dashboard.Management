@@ -20,18 +20,18 @@ namespace Hangfire.Core.Dashboard.Management.Pages
     {
         private readonly string pageTitle;
         private readonly string pageHeader;
-        private readonly string queue;
+        private readonly string section;
         
-        protected internal ManagementBasePage(string pageTitle, string pageHeader, string queue)
+        protected internal ManagementBasePage(string pageTitle, string pageHeader, string section)
         {
             this.pageTitle = pageTitle;
             this.pageHeader = pageHeader;
-            this.queue = queue;
+            this.section = section;
         }
 
         protected virtual void Content()
         {
-            var jobs = JobsHelper.Metadata.Where(j => j.Queue.Contains(queue));
+            var jobs = JobsHelper.Jobs.Where(j => j.ManagementPageSection.Contains(section)).OrderBy( job =>job.Type.ToString()).ToList();
 
             foreach (var jobMetadata in jobs)
             {
@@ -120,9 +120,9 @@ namespace Hangfire.Core.Dashboard.Management.Pages
             return $"{ jobMetadata.Type.Name.ToString() }-{ jobMetadata.MethodInfo.Name}";
         }
 
-        public static void BuildApiRoutesAndHandlersForAllJobs(string queue)
+        public static void BuildApiRoutesAndHandlersForAllJobs(string section)
         {
-            var jobs = JobsHelper.Metadata.Where(j => j.Queue.Contains(queue));
+            var jobs = JobsHelper.Jobs.Where(j => j.ManagementPageSection.Contains(section));
 
             foreach (var jobMetadata in jobs)
             {
@@ -237,7 +237,7 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                             try
                             {
                                 var recurringJobUnqiueId = String.Format(jobMetadata.DisplayName, job.Args.ToArray());
-                                manager.AddOrUpdate(recurringJobUnqiueId, job, cron, TimeZoneInfo.Utc, queue);
+                                manager.AddOrUpdate(recurringJobUnqiueId, job, cron, TimeZoneInfo.Utc);
                                 jobLink = new UrlHelper(context).To("/recurring");
                             }
                             catch (Exception e)

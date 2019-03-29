@@ -8,6 +8,7 @@ namespace Hangfire.Core.Dashboard.Management.Metadata
         public string DisplayName { get; set; }
         public string Description { get; set; }
         public string Queue { get; set; }
+        public string ManagementPageSection { get; set; }
         public Type Type { get; set; }
         public MethodInfo MethodInfo { get; set; }
     }

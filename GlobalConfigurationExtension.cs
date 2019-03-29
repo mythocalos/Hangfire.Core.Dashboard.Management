@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Hangfire.Core.Dashboard.Management.Metadata;
 using Hangfire.Core.Dashboard.Management.Pages;
 using Hangfire.Core.Dashboard.Management.Support;
 using Hangfire.Dashboard;
@@ -12,23 +13,25 @@ namespace Hangfire.Core.Dashboard.Management
 {
     public static class GlobalConfigurationExtension
     {
-        public static void UseManagementPages(this IGlobalConfiguration config, Assembly assembly)
+        public static void UseManagementPages(this IGlobalConfiguration config, Assembly assembly, List<ManagementPageNavigation> navigation)
         {
             JobsHelper.GetAllJobs(assembly);
-            CreateManagement();
+            CreateManagement(navigation);
         }
 
-        private static void CreateManagement()
+        private static void CreateManagement(List<ManagementPageNavigation> navigationPages)
         {
-            foreach (var pageInfo in JobsHelper.Pages)
+
+            foreach (var page in navigationPages)
             {
-                ManagementBasePage.BuildApiRoutesAndHandlersForAllJobs(pageInfo.Queue);
-                ManagementSidebarMenu.Items.Add(p => new MenuItem(pageInfo.MenuName, p.Url.To($"{ManagementPage.UrlRoute}/{pageInfo.MenuName.ToLower().Replace(" ", String.Empty)}"))
+                ManagementBasePage.BuildApiRoutesAndHandlersForAllJobs(page.Section);
+
+                ManagementSidebarMenu.Items.Add(p => new MenuItem(page.SidebarName, p.Url.To($"{ManagementPage.UrlRoute}/{page.SidebarName.ToLower().Replace(" ", String.Empty)}"))
                 {
-                    Active = p.RequestPath.StartsWith($"{ManagementPage.UrlRoute}/{pageInfo.MenuName.ToLower().Replace(" ", String.Empty)}")
+                    Active = p.RequestPath.StartsWith($"{ManagementPage.UrlRoute}/{page.SidebarName.ToLower().Replace(" ", String.Empty)}")
                 });
 
-                DashboardRoutes.Routes.AddRazorPage($"{ManagementPage.UrlRoute}/{pageInfo.MenuName.ToLower().Replace(" ", String.Empty)}", x => new ManagementBasePage(pageInfo.Title, pageInfo.Title, pageInfo.Queue));
+                DashboardRoutes.Routes.AddRazorPage($"{ManagementPage.UrlRoute}/{page.SidebarName.ToLower().Replace(" ", String.Empty)}", x => new ManagementBasePage(page.Title, page.Title, page.Section));
             }
             
             //note: have to use new here as the pages are dispatched and created each time. If we use an instance, the page gets duplicated on each call
