@@ -19,24 +19,28 @@ Hangfire.Core.Dashboard.Management provides a Management page in the default das
 ## Setup
 
 ```c#
-GlobalConfiguration.Configuration
-    .UseManagementPages(<assembly with IJob implementations>);    
+
+var pages = new List<ManagementPageNavigation>();
+                pages.Add( new ManagementPageNavigation("misc-jobs", "misc-jobs", "Miscellaneous Jobs", "A bunch of random Jobs"));
+var jobProjectAssembly = typeof(YourCompany.Project.With.Jobs.PickARandomJob).Assembly;
+GlobalConfiguration.Configuration.UseManagementPages(jobProjectAssembly, pages);    
 ```
 ## Defining Pages
 
-Pages are defined and based on your Job classes. A Job class needs to implement IJob. The class should also have the attribute 
-ManagementPage defined. Everything within this class will be on it's own page and have a navigation item in the side menu.
+Pages are defined and based on your Job classes. 
+A Job class needs to implement IJob. 
 
-Each function within the class is defined as a specific job. The function should be decorated with DisplayName and Description. 
-Displayname will be in the header of the panel and description is part of the panel body.
+Each function within the class is defined as a specific job. The function should be decorated with ManagementPageSection and Description optionally override other attributes like DisplayName
+Displayname will be in the header of the panel and description is part of the panel body, otherwise it false back to ClassName.MethodName
 
 Each input property, other than IJobCancellationToken and PerformContext, should be decorated with the DisplayData attribute. This
 defines the input label and placeholder text for better readability. 
 
 ```c#
-[ManagementPage("Misc Jobs", "Miscellaneous", "misc")]
+
 public class MiscJobs : IJob
 {   
+    [ManagementPageSection("misc-jobs")]
 	[DisplayName("Test")]    
 	[Description("Test that jobs are running with simple console output.")]
     [AutomaticRetry(Attempts = 0)]
