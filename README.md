@@ -21,8 +21,10 @@ Hangfire.Core.Dashboard.Management provides a Management page in the default das
 ```c#
 
 var pages = new List<ManagementPageNavigation>();
-                pages.Add( new ManagementPageNavigation("misc-jobs", "misc-jobs", "Miscellaneous Jobs", "A bunch of random Jobs"));
+	pages.Add( new ManagementPageNavigation("misc-jobs", "misc-jobs", "Miscellaneous Jobs", "A bunch of random Jobs"));
+
 var jobProjectAssembly = typeof(YourCompany.Project.With.Jobs.PickARandomJob).Assembly;
+
 GlobalConfiguration.Configuration.UseManagementPages(jobProjectAssembly, pages);    
 ```
 ## Defining Pages
