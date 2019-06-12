@@ -69,11 +69,19 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         {
                             inputs += InputDatebox(myId, displayInfo?.LabelText ?? parameterInfo.Name, displayInfo?.PlaceholderText ?? parameterInfo.Name);
                         }
+                        else if (parameterInfo.ParameterType == typeof(DateTime?))
+                        {
+                            inputs += InputDatebox(myId, displayInfo?.LabelText ?? parameterInfo.Name, displayInfo?.PlaceholderText ?? parameterInfo.Name);
+                        }
                         else if (parameterInfo.ParameterType == typeof(bool))
                         {
                             inputs += "<br/>" + InputCheckbox(myId, displayInfo?.LabelText ?? parameterInfo.Name, displayInfo?.PlaceholderText ?? parameterInfo.Name);
                         }
                         else if (parameterInfo.ParameterType.ToString().Contains("Enum"))
+                        {
+                            inputs += InputTextbox(myId, displayInfo?.LabelText ?? parameterInfo.Name, displayInfo?.PlaceholderText ?? parameterInfo.Name);
+                        }
+                        else if (parameterInfo.ParameterType.ToString().Contains("Dictionary"))
                         {
                             inputs += InputTextbox(myId, displayInfo?.LabelText ?? parameterInfo.Name, displayInfo?.PlaceholderText ?? parameterInfo.Name);
                         }
@@ -171,9 +179,17 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                             {
                                 item = formInput == null ? DateTime.MinValue : DateTime.Parse(formInput);
                             }
+                            else if (parameterInfo.ParameterType == typeof(DateTime?))
+                            {
+                                item = formInput == null ? (DateTime?)null : DateTime.Parse(formInput);
+                            }
                             else if (parameterInfo.ParameterType == typeof(bool))
                             {
                                 item = formInput == "on";
+                            }
+                            else if (parameterInfo.ParameterType == typeof(Dictionary<string,object>))
+                            {
+                                item = formInput == null ? (Dictionary<string, object>)null : JsonConvert.DeserializeObject<Dictionary<string, object>>(formInput);
                             }
                             else if (parameterInfo.ParameterType.ToString().Contains("Enum"))
                             {
