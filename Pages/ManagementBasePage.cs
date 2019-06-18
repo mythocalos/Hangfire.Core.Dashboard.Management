@@ -158,7 +158,7 @@ namespace Hangfire.Core.Dashboard.Management.Pages
 
 
                             var variable = $"{methodName}_{parameterInfo.Name}";
-                            if (parameterInfo.ParameterType == typeof(DateTime))
+                            if (parameterInfo.ParameterType == typeof(DateTime) || parameterInfo.ParameterType == typeof(DateTime?))
                             {
                                 variable = $"{variable}_datetimepicker";
                             }
