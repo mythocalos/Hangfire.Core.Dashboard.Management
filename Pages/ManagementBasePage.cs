@@ -91,7 +91,7 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         }
                     }
 
-                    Panel(id, jobMetadata.Type.Name + "." +jobMetadata.DisplayName, jobMetadata.Description, inputs, CreateButtons(route, "Enqueue", "enqueueing", id));
+                    Panel(id, jobMetadata.Type.Name + "." + jobMetadata.DisplayName, jobMetadata.Description, inputs, CreateButtons(route, "Enqueue", "enqueueing", id));
 
                 }
                 else
@@ -132,6 +132,7 @@ namespace Hangfire.Core.Dashboard.Management.Pages
         {
             var jobs = JobsHelper.Jobs.Where(j => j.ManagementPageSection.Contains(section));
 
+
             foreach (var jobMetadata in jobs)
             {
                 var route = GetRoute(jobMetadata);
@@ -149,8 +150,7 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         
                         foreach (var parameterInfo in jobMetadata.MethodInfo.GetParameters())
                         {
-                            if (parameterInfo.ParameterType == typeof(PerformContext) ||
-                                parameterInfo.ParameterType == typeof(IJobCancellationToken))
+                            if (parameterInfo.ParameterType == typeof(PerformContext) || parameterInfo.ParameterType == typeof(IJobCancellationToken))
                             {
                                 par.Add(null);
                                 continue;
@@ -222,7 +222,6 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         return false;
                     }
 
-                    
                     try
                     {
                         var job = new Job(jobMetadata.Type, jobMetadata.MethodInfo, par.ToArray());
@@ -376,6 +375,53 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                                      data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">30 min</a></li>
                                 <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""60""
                                      data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">60 min</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""120""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">2 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""180""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">3 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""240""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">4 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""300""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">5 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""360""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">6 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""420""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">7 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""480""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">8 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""540""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">9 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""600""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">10 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""660""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">11 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""720""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">12 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""780""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">13 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""840""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">14 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""900""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">15 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""960""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">16 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""1020""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">17 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""1080""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">18 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""1140""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">19 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""1200""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">20 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""1260""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">21 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""1320""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">22 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""1380""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">23 Hours</a></li>
+                                <li><a href=""#"" class=""js-management-input-commands"" input-id=""{id}"" schedule=""1440""
+                                     data-url=""{Url.To(url)}"" data-loading-text=""{loadingText}"">24 Hours</a></li>
+
 
                             </ul>
                         </div>
