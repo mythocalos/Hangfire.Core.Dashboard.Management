@@ -29,7 +29,7 @@ namespace Hangfire.Core.Dashboard.Management.Support
 //                }
                 
 
-                foreach (var methodInfo in ti.GetMethods().Where(m => m.DeclaringType == ti))
+                foreach (var methodInfo in ti.GetMethods().Where(m => m.DeclaringType == ti && m.GetCustomAttributes(true).OfType<ManagementPageSectionAttribute>().Any()))
                 {
                     var jobData = new JobMetadata
                     {
