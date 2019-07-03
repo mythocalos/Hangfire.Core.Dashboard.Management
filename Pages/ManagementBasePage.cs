@@ -81,6 +81,10 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         {
                             inputs += InputTextbox(myId, displayInfo?.LabelText ?? parameterInfo.Name, displayInfo?.PlaceholderText ?? parameterInfo.Name);
                         }
+                        else if (parameterInfo.ParameterType.ToString().Contains("List"))
+                        {
+                            inputs += InputTextbox(myId, displayInfo?.LabelText ?? parameterInfo.Name, displayInfo?.PlaceholderText ?? parameterInfo.Name);
+                        }
                         else if (parameterInfo.ParameterType.ToString().Contains("Dictionary"))
                         {
                             inputs += InputTextbox(myId, displayInfo?.LabelText ?? parameterInfo.Name, displayInfo?.PlaceholderText ?? parameterInfo.Name);
@@ -190,6 +194,14 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                             else if (parameterInfo.ParameterType == typeof(Dictionary<string,object>))
                             {
                                 item = formInput == null ? (Dictionary<string, object>)null : JsonConvert.DeserializeObject<Dictionary<string, object>>(formInput);
+                            }
+                            else if (parameterInfo.ParameterType == typeof(List<int>))
+                            {
+                                item = formInput == null ? (List<int>)null : formInput.Split(',').Select(int.Parse).ToList();
+                            }
+                            else if (parameterInfo.ParameterType == typeof(List<string>))
+                            {
+                                item = formInput == null ? (List<string>)null : formInput.Split(',').ToList();
                             }
                             else if (parameterInfo.ParameterType.ToString().Contains("Enum"))
                             {
